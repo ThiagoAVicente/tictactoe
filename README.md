@@ -26,3 +26,11 @@ This project implements a console-based **Tic-Tac-Toe** game where the player co
    ```bash
    g++ main.cpp Board.cpp Bot.cpp Node.cpp -o TicTacToe
 
+## How to Play
+
+1. Start the game, and the board will be displayed.
+2. Enter your move as two numbers: the row (`x`) and column (`y`), separated by a space (e.g., `1 2`).
+3. The bot will respond with its move.
+4. Continue playing until:
+    - A player aligns three symbols (row, column, or diagonal).
+    - The board is full, resulting in a tie.
