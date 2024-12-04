@@ -34,3 +34,7 @@ This project implements a console-based **Tic-Tac-Toe** game where the player co
 4. Continue playing until:
     - A player aligns three symbols (row, column, or diagonal).
     - The board is full, resulting in a tie.
+
+## Notes
+- Replace `system("cls")` with `system("clear")` if using Linux/Mac.
+- Invalid moves are ignored.
