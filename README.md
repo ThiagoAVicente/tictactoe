@@ -12,9 +12,9 @@ The agent uses a **Minimax algorithm** to determine the best move. It will be al
 The agent will play the move that minimizes the score. 
 
 ### Scoring system:
-Agent win: -10 + depth  
-Agent tie: 0
-Player win: 10 - depth
+- Agent win: -10 + depth  
+- Agent tie: 0
+- Player win: 10 - depth
 
 **Note** that by using this, the smallest value will be the best chance for the agent winning.
 Using this scoring system turns the agent into a better player if compared to an agent that only uses -1,0,1 as scores.
