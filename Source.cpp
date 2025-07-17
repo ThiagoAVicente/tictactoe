@@ -1,56 +1,66 @@
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 
 #include "Board.h"
 #include "Bot.h"
 #include "Node.h"
 
+void clean() {
+#ifdef _WIN32
+  system("cls");
+#else
+  system("clear");
+#endif
+}
+
+void checkWinner(Board &game) {
+  Node::STATES winner = Board::calculateWinner(*game.board);
+  if (winner != Node::STATES::N) {
+    clean();
+    Board::printBoard(*game.board);
+    if (winner == Node::STATES::X) {
+      std::cout << "Player X wins!" << std::endl;
+    } else {
+      std::cout << "Player O wins!" << std::endl;
+    }
+    exit(0);
+  } else if (Board::isFull(*game.board)) {
+    clean();
+    Board::printBoard(*game.board);
+    std::cout << "It's a draw!" << std::endl;
+    exit(0);
+  }
+}
 int main() {
 
-	Board game;
+  Board game;
+  int x;
 
-	int x, y;
+  while (true) {
+    checkWinner(game);
 
-	while (true) {
-		system("cls");
+    clean();
 
-		Board::printBoard(*game.board);
+    Board::printBoard(*game.board);
 
-		Node::STATES winner = Board::calculateWinner(*game.board);
-		if (winner == Node::STATES::X) {
-			std::cout << "Winner!" << std::endl;
-			exit(0);
-		}
-		if (winner == Node::STATES::O) {
-			std::cout << "Loser!" << std::endl;
-			exit(0);
-		}
-		if (Board::isFull(*game.board)) {
-			std::cout << "Tie" << std::endl;
-			exit(0);
-		}
+    std::cout << "Move: (1-9) " << std::endl;
 
-		
-		std::cout << "Move: " << std::endl;
-		
-		std::cin >> x;
-		std::cin >> y;
+    std::cin >> x;
 
-		if (x >= 0 && x < SIZE && y >= 0 && y < SIZE ) {
-			if ((game.board)->at(x).at(y)->value == Node::STATES::N) {
-				Board::play({ x,y },game.board );
-				Bot::organizePlay(game);
-			}
-			else {
-				continue;
-			}
+    if (x >= 1 && x <= SIZE * SIZE) {
+      int line, row;
+      // convert x to line and row
+      line = (x - 1) / SIZE;
+      row = (x - 1) % SIZE;
+      if ((game.board)->at(line).at(row)->value == Node::STATES::N) {
+        Board::play({line, row}, game.board);
+        checkWinner(game);
+        Bot::organizePlay(game);
+      } else {
+        continue;
+      }
+    }
+  }
 
-		}
-
-
-
-	}
-
-
-	return 0;
+  return 0;
 }

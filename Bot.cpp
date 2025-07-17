@@ -1,178 +1,152 @@
 #include "Bot.h"
+#include <algorithm>
+#include <limits>
 
-	void Bot::organizePlay(Board board) {
+static void freeMatrix(Matrix &matrix) {
+  for (auto &row : matrix)
+    for (Node *n : row)
+      delete n;
+  matrix.clear();
+}
 
-		std::vector< std::vector < Node* > >* table = board.board;
+void Bot::organizePlay(Board &board) {
+  Matrix *table = board.board;
+  std::vector<std::pair<int, int>> possibles = Board::getFrees(*table);
 
-		//BOT plays second
-		std::vector<std::pair<int, int>> possibles = Board::getFrees(*table);
+  std::vector<std::pair<std::pair<int, int>, int>> choose;
 
-		bool srt = false;
+  // If we're going first or second, prioritize the center or corners
+  if (justOne(*table) || Board::getFrees(*table).size() >= 7) {
+    // Try to take center first
+    for (const auto &play_ : possibles) {
+      if (play_.first == 1 && play_.second == 1) {
+        Board::play(play_, table, Node::STATES::O);
+        return;
+      }
+    }
+    // Then try corners
+    for (const auto &play_ : possibles) {
+      if ((play_.first == 0 && play_.second == 0) ||
+          (play_.first == 0 && play_.second == 2) ||
+          (play_.first == 2 && play_.second == 0) ||
+          (play_.first == 2 && play_.second == 2)) {
+        Board::play(play_, table, Node::STATES::O);
+        return;
+      }
+    }
+  }
 
-		if (justOne(*table)) {
-			srt = true;
-			std::random_device rd; // Obtain a random number from hardware
-			std::mt19937 rng(rd()); // Seed the generator
+  // Check for immediate win for O
+  for (const auto &play_ : possibles) {
+    Matrix copied = copyBoard(*table);
+    Board::play(play_, &copied, Node::STATES::O);
+    if (Board::calculateWinner(copied) == Node::STATES::O) {
+      Board::play(play_, table, Node::STATES::O);
+      freeMatrix(copied);
+      return;
+    }
+    freeMatrix(copied);
+  }
 
-			std::shuffle(possibles.begin(), possibles.end(), rng);
+  // Check for immediate block needed
+  for (const auto &play_ : possibles) {
+    Matrix copied = copyBoard(*table);
+    Board::play(play_, &copied, Node::STATES::X);
+    if (Board::calculateWinner(copied) == Node::STATES::X) {
+      Board::play(play_, table, Node::STATES::O);
+      freeMatrix(copied);
+      return;
+    }
+    freeMatrix(copied);
+  }
 
-			possibles = std::vector<std::pair<int, int>>(possibles.begin(), possibles.begin() + 4);
-		}
+  int bestScore = std::numeric_limits<int>::max();
+  std::pair<int, int> bestPlay = possibles[0]; // Default to first move
 
-		std::vector < std::pair < std::pair<int, int>, int> > choose;
+  for (const auto &play_ : possibles) {
+    Matrix copied = copyBoard(*table);
+    Board::play(play_, &copied, Node::STATES::O);
 
-		for (std::pair<int, int> play_ : possibles) {
-			std::vector< std::vector < Node* > >* copied = copyBoard(*table);
+    int score = maxValue(copied, 0);
 
-			Board::play(play_, copied);
-			int temp = minValue(copied, srt);
-			
-			for (std::vector < Node* > v : *copied) {
+    if (score < bestScore) {
+      bestScore = score;
+      bestPlay = play_;
+    }
 
-				for (Node* n : v) {
-					delete n;
-				}
+    freeMatrix(copied);
+  }
 
-			}
-			delete copied;
-			choose.push_back({ play_, temp });
-		}
+  Board::play(bestPlay, table, Node::STATES::O);
+}
 
-		int min = 100;
-		std::pair<int, int> play;
+Matrix Bot::copyBoard(const Matrix &board) {
+  Matrix ret(SIZE, std::vector<Node *>(SIZE, nullptr));
+  for (int x = 0; x < SIZE; ++x) {
+    for (int y = 0; y < SIZE; ++y) {
+      Node *toAdd = new Node(x, y);
+      toAdd->value = board[x][y]->value;
+      ret[x][y] = toAdd;
+    }
+  }
+  return ret;
+}
 
-		for (std::pair<std::pair<int, int>, int> item : choose) {
+int Bot::minValue(Matrix &board, int depth) {
+  // Terminal state checks
+  auto winner = Board::calculateWinner(board);
+  if (winner == Node::STATES::O)
+    return -10 + depth; // good
+  if (winner == Node::STATES::X)
+    return 10 - depth; // bad
+  if (Board::isFull(board))
+    return 0; // Draw
 
-			if (item.second < min) {
-				min = item.second;
-				play = item.first;
-			}
-		}
+  int minVal = std::numeric_limits<int>::max();
+  for (const auto &play : Board::getFrees(board)) {
+    Matrix copied = copyBoard(board);
+    Board::play(play, &copied, Node::STATES::O);
+    int temp = maxValue(copied, depth + 1);
+    minVal = std::min(minVal, temp);
+    freeMatrix(copied);
+  }
 
-		Board::play(play, table);
-		return;
+  return minVal;
+}
 
-	}
+int Bot::maxValue(Matrix &board, int depth) {
+  // Terminal state checks
+  auto winner = Board::calculateWinner(board);
+  if (winner == Node::STATES::O)
+    return -10 + depth; // bad
+  if (winner == Node::STATES::X)
+    return 10 - depth; // good
+  if (Board::isFull(board))
+    return 0; // Draw
 
-	std::vector< std::vector < Node* > >* Bot::copyBoard(std::vector< std::vector < Node* > >& board) {
+  int maxVal = std::numeric_limits<int>::min();
+  for (const auto &play : Board::getFrees(board)) {
+    Matrix copied = copyBoard(board);
+    Board::play(play, &copied, Node::STATES::X);
+    int temp = minValue(copied, depth + 1);
+    maxVal = std::max(maxVal, temp);
+    freeMatrix(copied);
+  }
 
-		std::vector< std::vector < Node* > >* ret = new std::vector< std::vector < Node* > >(SIZE, std::vector<Node*>(SIZE, nullptr));
+  return maxVal;
+}
 
-		for (int x = 0; x < SIZE; x++) {
+bool Bot::justOne(const Matrix &board) {
+  int count = 0;
+  for (const auto &row : board) {
+    for (const Node *n : row) {
+      if (n->value != Node::STATES::N)
+        count++;
+    }
+  }
+  return count <= 1;
+}
 
-			for (int y = 0; y < SIZE; y++) {
+int Bot::getMax(int a, int b) { return std::max(a, b); }
 
-				Node* toAdd = new Node(x, y);
-				toAdd->value = board[x][y]->value;
-				(*ret)[x][y] = toAdd;
-
-			}
-		}
-
-		return ret;
-
-	}
-
-	int Bot::minValue(std::vector<std::vector<Node*>>* board, bool srt) {
-
-		if (Board::isFull(*board)) {
-			return 0;
-		}
-
-		if (Board::calculateWinner(*board) == Node::STATES::O) {
-			return -1;
-		}
-
-		std::vector<std::pair<int, int>> possibles = Board::getFrees(*board);
-
-		if (srt && possibles.size() > SIZE) {
-			std::random_device rd;
-			std::mt19937 rng(rd());
-
-			std::shuffle(possibles.begin(), possibles.end(), rng);
-
-			possibles = std::vector<std::pair<int, int>>(possibles.begin(), possibles.begin() + 2);
-		}
-
-		int minVal = 100; // Initialize to a large value
-
-		for (const std::pair<int, int>& play : possibles) {
-			std::vector<std::vector<Node*>>* copied = copyBoard(*board);
-			Board::play(play, copied);
-
-			int temp = maxValue(copied, srt);
-			minVal = getMin(minVal, temp);
-			delete copied;
-		}
-
-		return minVal;
-	}
-
-	int Bot::maxValue(std::vector<std::vector<Node*>>* board, bool srt) {
-
-		if (Board::calculateWinner(*board) == Node::STATES::X) {
-			return 1;
-		}
-
-		if (Board::isFull(*board)) {
-			return 0;
-		}
-
-		std::vector<std::pair<int, int>> possibles = Board::getFrees(*board);
-		if (srt && possibles.size() > SIZE) {
-			std::random_device rd; // Obtain a random number from hardware
-			std::mt19937 rng(rd()); // Seed the generator
-
-			std::shuffle(possibles.begin(), possibles.end(), rng);
-
-			possibles = std::vector<std::pair<int, int>>(possibles.begin(), possibles.begin() + 2);
-		}
-		int maxVal = -100; // Initialize to a small value
-
-		for (const std::pair<int, int>& play : possibles) {
-			std::vector<std::vector<Node*>>* copied = copyBoard(*board);
-			Board::play(play, copied);
-
-			int temp = minValue(copied,srt);
-			maxVal = getMax(maxVal, temp );
-			delete copied;
-		}
-
-		return maxVal;
-	}
-
-	bool Bot::justOne(std::vector< std::vector < Node* > > board) {
-		int count = 1;
-
-		for (std::vector < Node* > v : board) {
-
-			for (Node* n : v) {
-
-				if (!(n->value == Node::STATES::N)) {
-					count--;
-				}
-				if (count < 0 ) {
-					return false;
-				}
-
-			}
-
-		}
-		return true;
-	}
-
-	int Bot::getMax(int a, int b) {
-
-		if (a > b) {
-			return a;
-		}
-		return b;
-	}
-
-	int Bot::getMin(int a, int b) {
-
-		if (b > a) {
-			return a;
-		}
-		return b;
-	}
+int Bot::getMin(int a, int b) { return std::min(a, b); }

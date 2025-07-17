@@ -8,29 +8,27 @@
 
 #define SIZE 3
 
+typedef std::vector<std::vector<Node *>> Matrix;
+
 class Board {
 
-private:
-
-
-	Node::STATES static getNextPlayer(std::vector< std::vector < Node* > > board);
-
 public:
-	std::vector< std::vector < Node* > >* board = new std::vector< std::vector < Node* > >(SIZE, std::vector<Node*>(SIZE, nullptr));
+  Matrix *board = new Matrix(SIZE, std::vector<Node *>(SIZE, nullptr));
 
-	Board();
+  Board();
 
-	bool static isEmpty(const std::vector< std::vector < Node* > >& board);
+  bool static isEmpty(const Matrix &board);
 
-	std::vector< std::vector < Node* > > static play(std::pair<int, int> cord, std::vector< std::vector < Node* > > *board);
+  Matrix static play(std::pair<int, int> cord, Matrix *board,
+                     Node::STATES player = Node::STATES::X);
 
-	std::vector< std::pair<int, int> > static getFrees(std::vector< std::vector < Node* > > board);
+  std::vector<std::pair<int, int>> static getFrees(Matrix board);
 
-	void static printBoard(std::vector< std::vector < Node* > > &board);
+  void static printBoard(Matrix &board);
 
-	Node::STATES static calculateWinner(std::vector< std::vector < Node* > >& board);
+  Node::STATES static calculateWinner(Matrix &board);
 
-	bool static isFull(std::vector< std::vector < Node* > >& board);
+  bool static isFull(Matrix &board);
 };
 
 #endif
