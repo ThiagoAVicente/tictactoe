@@ -1,14 +1,14 @@
-# Tic-Tac-Toe Game with AI Bot
+# Tic-Tac-Toe Game with agent
 
 ## Overview
 
-This project implements a console-based **Tic-Tac-Toe** game where the player competes against an AI bot. The game dynamically updates the board, checks for winners, and ensures valid moves.
+This project implements a console-based **Tic-Tac-Toe** game where the player competes against an agent. The game dynamically updates the board, checks for winners, and ensures valid moves.
 
 ---
 
 ## Features
 
-- **Interactive Gameplay:** Play against an AI bot that responds after every move.
+- **Interactive Gameplay:** Play against an agent that responds after every move.
 - **Dynamic Board:** The board updates in real-time with each move.
 - **Winner Detection:** The game announces the winner or declares a tie.
 - **Input Validation:** Handles invalid moves gracefully.
