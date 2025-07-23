@@ -38,26 +38,32 @@ std::vector<std::pair<int, int>> Board::getFrees(Matrix board) {
   }
   return ret;
 }
-
 void Board::printBoard(Matrix &board) {
-
-  for (std::vector<Node *> v : board) {
-
-    for (Node *n : v) {
-
-      if (n->value == Node::STATES::N) {
-        std::cout << "  ";
+  for (int i = 0; i < SIZE; i++) {
+    for (int j = 0; j < SIZE; j++) {
+      if (board[i][j]->value == Node::STATES::N) {
+        // Calculate the position number (1-9) based on coordinates
+        int position = i * SIZE + j + 1;
+        std::cout << position;
+      }
+      else if (board[i][j]->value == Node::STATES::X) {
+        std::cout << "\033[31mX\033[0m";
+      }
+      else if (board[i][j]->value == Node::STATES::O) {
+        std::cout << "\033[34mO\033[0m";
       }
 
-      else if (n->value == Node::STATES::X) {
-        std::cout << "X ";
-      }
-
-      else if (n->value == Node::STATES::O) {
-        std::cout << "O ";
+      // Add separator unless it's the last column
+      if (j < SIZE - 1) {
+        std::cout << " | ";
       }
     }
     std::cout << std::endl;
+
+    // Add horizontal line after each row except the last
+    if (i < SIZE - 1) {
+      std::cout << "----------" << std::endl;
+    }
   }
 }
 bool Board::isFull(Matrix &board) {

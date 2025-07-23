@@ -20,7 +20,7 @@ void Bot::organizePlay(Board &board) {
     // Try to take center first
     for (const auto &play_ : possibles) {
       if (play_.first == 1 && play_.second == 1) {
-        Board::play(play_, table, Node::STATES::O);
+        Board::play(play_, table, symbol);
         return;
       }
     }
@@ -30,18 +30,18 @@ void Bot::organizePlay(Board &board) {
           (play_.first == 0 && play_.second == 2) ||
           (play_.first == 2 && play_.second == 0) ||
           (play_.first == 2 && play_.second == 2)) {
-        Board::play(play_, table, Node::STATES::O);
+        Board::play(play_, table, symbol);
         return;
       }
     }
   }
 
-  // Check for immediate win for O
+  // Check for immediate win for bot
   for (const auto &play_ : possibles) {
     Matrix copied = copyBoard(*table);
-    Board::play(play_, &copied, Node::STATES::O);
-    if (Board::calculateWinner(copied) == Node::STATES::O) {
-      Board::play(play_, table, Node::STATES::O);
+    Board::play(play_, &copied, symbol);
+    if (Board::calculateWinner(copied) == symbol) {
+      Board::play(play_, table, symbol);
       freeMatrix(copied);
       return;
     }
@@ -49,11 +49,13 @@ void Bot::organizePlay(Board &board) {
   }
 
   // Check for immediate block needed
+  auto opponentSymbol =
+      (symbol == Node::STATES::X) ? Node::STATES::O : Node::STATES::X;
   for (const auto &play_ : possibles) {
     Matrix copied = copyBoard(*table);
-    Board::play(play_, &copied, Node::STATES::X);
-    if (Board::calculateWinner(copied) == Node::STATES::X) {
-      Board::play(play_, table, Node::STATES::O);
+    Board::play(play_, &copied, opponentSymbol);
+    if (Board::calculateWinner(copied) == opponentSymbol) {
+      Board::play(play_, table, symbol);
       freeMatrix(copied);
       return;
     }
@@ -65,11 +67,11 @@ void Bot::organizePlay(Board &board) {
 
   for (const auto &play_ : possibles) {
     Matrix copied = copyBoard(*table);
-    Board::play(play_, &copied, Node::STATES::O);
+    Board::play(play_, &copied, symbol);
 
     int score = maxValue(copied, 0);
 
-    if (score < bestScore) {
+    if (this->choose(score, bestScore)) {
       bestScore = score;
       bestPlay = play_;
     }
@@ -77,7 +79,7 @@ void Bot::organizePlay(Board &board) {
     freeMatrix(copied);
   }
 
-  Board::play(bestPlay, table, Node::STATES::O);
+  Board::play(bestPlay, table, symbol);
 }
 
 Matrix Bot::copyBoard(const Matrix &board) {
@@ -150,3 +152,23 @@ bool Bot::justOne(const Matrix &board) {
 int Bot::getMax(int a, int b) { return std::max(a, b); }
 
 int Bot::getMin(int a, int b) { return std::min(a, b); }
+
+Bot::Bot(Node::STATES symbol) {
+  // bot cannot play as N
+  if (symbol == Node::STATES::N) {
+    throw std::invalid_argument("Bot cannot play as N");
+  }
+
+  // set symbol
+  this->symbol = symbol;
+  if (symbol == Node::STATES::X) {
+    this->choose = [](int a, int b) {
+      return a > b;
+    }; // X plays to maximize X's score
+    return;
+  }
+
+  this->choose = [](int a, int b) {
+    return a < b;
+  }; // O plays to minimize X's score
+}

@@ -7,12 +7,16 @@ This project implements a console-based **Tic-Tac-Toe** game where the player co
 ---
 
 ## How the agent works
+
 The agent uses a **Minimax algorithm** to determine the best move. It will be always playing as 'O', while the player plays as 'X'. The agent evaluates all possible moves and chooses the one that maximizes its chances of winning while minimizing the player's chances.
+
 ### Agent decision:
-The agent will play the move that minimizes the score. 
+
+The agent will play the move that minimizes the score.
 
 ### Scoring system:
-Agent win: -10 + depth  
+
+Agent win: -10 + depth
 Agent tie: 0
 Player win: 10 - depth
 
@@ -29,16 +33,44 @@ Using this scoring system turns the agent into a better player if compared to an
 
 ### Steps to Run:
 
-1. **Clone or Download:** Ensure all required files (`Source.cpp`, `Board.cpp`, `Board.h`, `Bot.cpp`, `Bot.h`, `Node.cpp`, `Node.h`) are in the same directory.
-2. **Compile the Program:**
+**Clone or Download:** Ensure all required files (`Source.cpp`, `Board.cpp`, `Board.h`, `Bot.cpp`, `Bot.h`, `Node.cpp`, `Node.h`) are in the same directory.
+
+#### 1. Installation to local/bin
+
+If you want to install the game to your local bin, you can use the following commands:
+
+```bash
+./install.sh
+```
+
+After the intallation, you can run the game from anywhere in your terminal by simply typing:
+
+```bash
+ttt
+```
+
+To see the help message, you can run:
+
+```bash
+ttt -h
+```
+
+#### 2. Normal compile and run
+
+**Compile the Program:**
    ```bash
    ./compile.sh
    ```
    This script compiles the source files into an executable named `TicTacToe`.
-3. **Run the Game:**
-    ```bash
-    ./TicTacToe
-    ```
+**Run:**
+   ```bash
+   ./TicTacToe
+   ```
+To see the help message, you can run:
+
+```bash
+./TicTacToe -h
+```
 
 ## How to Play
 
@@ -56,4 +88,5 @@ Using this scoring system turns the agent into a better player if compared to an
 5. The game will announce the winner or if it's a tie.
 
 ## Notes
+
 - Invalid moves are ignored.

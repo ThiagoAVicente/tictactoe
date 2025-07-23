@@ -4,6 +4,8 @@
 #include "Board.h"
 #include "Bot.h"
 #include "Node.h"
+#include <chrono>
+#include <thread>
 
 void clean() {
 #ifdef _WIN32
@@ -11,6 +13,14 @@ void clean() {
 #else
   system("clear");
 #endif
+}
+
+void printUsage(const char *programName) {
+  std::cout << "Usage: " << programName << " [option]" << std::endl;
+  std::cout << "Options:" << std::endl;
+  std::cout << "  -x    Play as X (default)" << std::endl;
+  std::cout << "  -o    Play as O (bot starts)" << std::endl;
+  std::cout << "  -b    Bot vs Bot" << std::endl;
 }
 
 void checkWinner(Board &game) {
@@ -31,11 +41,55 @@ void checkWinner(Board &game) {
     exit(0);
   }
 }
-int main() {
+
+int botgame(Board &game) {
+  Bot b1(Node::STATES::O);
+  Bot b2(Node::STATES::X);
+  while (true) {
+    clean();
+    Board::printBoard(*game.board);
+
+    checkWinner(game);
+
+    b1.organizePlay(game);
+    checkWinner(game);
+    b2.organizePlay(game);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  }
+}
+
+int main(int argc, char *argv[]) {
 
   Board game;
-  int x;
+  Node::STATES player = Node::STATES::X;
 
+  for (int i = 1; i < argc; i++) {
+    std::string arg = argv[i];
+    if (arg == "-x") {
+      player = Node::STATES::X;
+      break;
+    } else if (arg == "-o") {
+      player = Node::STATES::O;
+      break;
+    } else if (arg == "-b") {
+      return botgame(game); // Bot vs Bot mode
+
+    } else {
+      printUsage(argv[0]);
+      return 1;
+    }
+  }
+
+  // normal bot vs player mode
+  Node::STATES botSymbol =
+      (player == Node::STATES::X) ? Node::STATES::O : Node::STATES::X;
+  int x;
+  Bot bot(botSymbol);
+
+  if (player == Node::STATES::O) {
+    bot.organizePlay(game); // Bot starts
+  }
   while (true) {
     checkWinner(game);
 
@@ -53,9 +107,9 @@ int main() {
       line = (x - 1) / SIZE;
       row = (x - 1) % SIZE;
       if ((game.board)->at(line).at(row)->value == Node::STATES::N) {
-        Board::play({line, row}, game.board);
+        Board::play({line, row}, game.board, player);
         checkWinner(game);
-        Bot::organizePlay(game);
+        bot.organizePlay(game);
       } else {
         continue;
       }
