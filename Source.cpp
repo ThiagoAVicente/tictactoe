@@ -84,7 +84,9 @@ int main(int argc, char *argv[]) {
   // normal bot vs player mode
   Node::STATES botSymbol =
       (player == Node::STATES::X) ? Node::STATES::O : Node::STATES::X;
+
   int x;
+  std::string input;
   Bot bot(botSymbol);
 
   if (player == Node::STATES::O) {
@@ -97,9 +99,19 @@ int main(int argc, char *argv[]) {
 
     Board::printBoard(*game.board);
 
-    std::cout << "Move: (1-9) " << std::endl;
+    std::cout << "Move: (q to quit) " << std::endl;
 
-    std::cin >> x;
+    std::cin >> input;
+
+    if (input == "q" || input == "Q") {
+      std::cout << "Exiting game." << std::endl;
+      break;
+    }
+    try {
+      x = std::stoi(input);
+    } catch (...) {
+      continue;
+    }
 
     if (x >= 1 && x <= SIZE * SIZE) {
       int line, row;
